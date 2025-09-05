@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>রেস্টুরেন্ট অর্ডার - অ্যাডমিন</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-form">
+            <div class="login-header">
+                <i class="fas fa-utensils"></i>
+                <h1>অ্যাডমিন লগইন</h1>
+                <p>রেস্টুরেন্ট ম্যানেজমেন্ট সিস্টেম</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">ইমেইল:</label>
+                    <input type="email" id="email" required placeholder="আপনার ইমেইল লিখুন">
+                </div>
+                <div class="form-group">
+                    <label for="password">পাসওয়ার্ড:</label>
+                    <input type="password" id="password" required placeholder="আপনার পাসওয়ার্ড লিখুন">
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    লগইন করুন
+                </button>
+            </form>
+            <div class="login-error" id="loginError"></div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard" id="dashboard" style="display: none;">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-utensils"></i>
+                    <h1>স্বাদের রাজ্য - অ্যাডমিন</h1>
+                </div>
+                <div class="header-actions">
+                    <div class="notification-bell" id="notificationBell">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-count" id="notificationCount">0</span>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        লগআউট
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="dashboard-nav">
+            <button class="nav-tab active" data-tab="orders" onclick="switchTab('orders')">
+                <i class="fas fa-shopping-cart"></i>
+                অর্ডার সমূহ
+                <span class="pending-count" id="pendingCount">0</span>
+            </button>
+            <button class="nav-tab" data-tab="products" onclick="switchTab('products')">
+                <i class="fas fa-utensils"></i>
+                পণ্য ব্যবস্থাপনা
+            </button>
+            <button class="nav-tab" data-tab="categories" onclick="switchTab('categories')">
+                <i class="fas fa-tags"></i>
+                ক্যাটেগরি ব্যবস্থাপনা
+            </button>
+        </nav>
+
+        <!-- Orders Tab -->
+        <div class="tab-content active" id="ordersTab">
+            <div class="tab-header">
+                <h2>সব অর্ডার</h2>
+                <div class="order-filters">
+                    <button class="filter-btn active" data-status="all" onclick="filterOrders('all')">সব</button>
+                    <button class="filter-btn" data-status="pending" onclick="filterOrders('pending')">অপেক্ষমান</button>
+                    <button class="filter-btn" data-status="preparing" onclick="filterOrders('preparing')">প্রস্তুত হচ্ছে</button>
+                    <button class="filter-btn" data-status="completed" onclick="filterOrders('completed')">সম্পন্ন</button>
+                </div>
+            </div>
+            
+            <div class="orders-grid" id="ordersGrid">
+                <!-- Orders will be loaded here -->
+            </div>
+            
+            <div class="empty-orders" id="emptyOrders" style="display: none;">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>কোন অর্ডার নেই</h3>
+                <p>নতুন অর্ডার আসলে এখানে দেখাবে</p>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div class="tab-content" id="productsTab">
+            <div class="tab-header">
+                <h2>পণ্য ব্যবস্থাপনা</h2>
+                <button class="add-btn" onclick="showAddProductModal()">
+                    <i class="fas fa-plus"></i>
+                    নতুন পণ্য যোগ করুন
+                </button>
+            </div>
+            
+            <div class="products-grid" id="adminProductsGrid">
+                <!-- Products will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Categories Tab -->
+        <div class="tab-content" id="categoriesTab">
+            <div class="tab-header">
+                <h2>ক্যাটেগরি ব্যবস্থাপনা</h2>
+                <button class="add-btn" onclick="showAddCategoryModal()">
+                    <i class="fas fa-plus"></i>
+                    নতুন ক্যাটেগরি যোগ করুন
+                </button>
+            </div>
+            
+            <div class="categories-grid" id="adminCategoriesGrid">
+                <!-- Categories will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="productModalTitle">নতুন পণ্য যোগ করুন</h2>
+                <button class="close-btn" onclick="closeProductModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="productForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="productName">পণ্যের নাম:</label>
+                        <input type="text" id="productName" required placeholder="পণ্যের নাম লিখুন">
+                    </div>
+                    <div class="form-group">
+                        <label for="productPrice">দাম (৳):</label>
+                        <input type="number" id="productPrice" required placeholder="দাম লিখুন" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="productCategory">ক্যাটেগরি:</label>
+                        <select id="productCategory" required>
+                            <option value="">ক্যাটেগরি নির্বাচন করুন</option>
+                            <option value="drinks">পানীয়</option>
+                            <option value="burger">বার্গার</option>
+                            <option value="pizza">পিজা</option>
+                            <option value="rice">ভাত</option>
+                            <option value="chicken">চিকেন</option>
+                            <option value="beef">গরুর মাংস</option>
+                            <option value="fish">মাছ</option>
+                            <option value="vegetable">সবজি</option>
+                            <option value="dessert">মিষ্টি</option>
+                            <option value="snacks">নাস্তা</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="productPriority">প্রাধিকার:</label>
+                        <select id="productPriority" required>
+                            <option value="low">Low - সাধারণ পণ্য</option>
+                            <option value="medium">Medium - জনপ্রিয় পণ্য</option>
+                            <option value="high">High - বিশেষ পণ্য</option>
+                            <option value="most_selling">Top Selling - সবচেয়ে বিক্রিত</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="productImageOption">ছবি যোগ করার পদ্ধতি:</label>
+                        <div class="image-option-tabs">
+                            <button type="button" class="tab-btn active" onclick="switchImageTab('url')">URL দিয়ে</button>
+                            <button type="button" class="tab-btn" onclick="switchImageTab('upload')">ছবি আপলোড</button>
+                        </div>
+                        
+                        <div class="image-input-section" id="urlSection">
+                            <input type="url" id="productImage" placeholder="ছবির লিংক দিন (ঐচ্ছিক)">
+                        </div>
+                        
+                        <div class="image-input-section" id="uploadSection" style="display: none;">
+                            <input type="file" id="productImageFile" accept="image/*" onchange="previewImage(this)">
+                            <div class="image-preview" id="imagePreview" style="display: none;">
+                                <img id="previewImg" src="" alt="Preview">
+                                <button type="button" class="remove-image" onclick="removeImagePreview()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="upload-help">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>JPG, PNG, GIF ফাইল সাপোর্ট করে (সর্বোচ্চ ৫MB)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeProductModal()">বাতিল</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        সেভ করুন
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Status Modal -->
+    <div class="modal" id="orderStatusModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>অর্ডার স্ট্যাটাস আপডেট</h2>
+                <button class="close-btn" onclick="closeOrderStatusModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="order-details" id="orderDetails">
+                    <!-- Order details will be shown here -->
+                </div>
+                <div class="status-buttons">
+                    <button class="status-btn preparing" onclick="safeUpdateOrderStatus('preparing')">
+                        <i class="fas fa-clock"></i>
+                        প্রস্তুত হচ্ছে
+                    </button>
+                    <button class="status-btn completed" onclick="safeUpdateOrderStatus('completed')">
+                        <i class="fas fa-check-double"></i>
+                        সম্পন্ন
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="categoryModalTitle">নতুন ক্যাটেগরি যোগ করুন</h2>
+                <button class="close-btn" onclick="closeCategoryModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="categoryForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="categoryKey">ক্যাটেগরি কী (ইংরেজি):</label>
+                        <input type="text" id="categoryKey" required placeholder="যেমন: drinks, burger" pattern="[a-z_]+" title="শুধু ছোট হাতের অক্ষর এবং আন্ডারস্কোর ব্যবহার করুন">
+                    </div>
+                    <div class="form-group">
+                        <label for="categoryName">ক্যাটেগরি নাম (বাংলা):</label>
+                        <input type="text" id="categoryName" required placeholder="যেমন: পানীয়, বার্গার">
+                    </div>
+                    <div class="form-group">
+                        <label for="categoryIcon">আইকন:</label>
+                        <div class="icon-selection-container">
+                            <div class="icon-input-section">
+                                <div class="icon-option-tabs">
+                                    <button type="button" class="tab-btn active" onclick="switchIconTab('fontawesome')">FontAwesome</button>
+                                    <button type="button" class="tab-btn" onclick="switchIconTab('image')">Image URL</button>
+                                </div>
+                                
+                                <div class="icon-input-content" id="fontawesomeSection">
+                                    <select id="categoryIcon" onchange="updateIconPreview()">
+                                        <option value="fas fa-glass-martini">পানীয় (পেয়ালা)</option>
+                                        <option value="fas fa-hamburger">বার্গার</option>
+                                        <option value="fas fa-pizza-slice">পিজা</option>
+                                        <option value="fas fa-bowl-rice">ভাত</option>
+                                        <option value="fas fa-drumstick-bite">চিকেন</option>
+                                        <option value="fas fa-bacon">গরুর মাংস</option>
+                                        <option value="fas fa-fish">মাছ</option>
+                                        <option value="fas fa-carrot">সবজি</option>
+                                        <option value="fas fa-ice-cream">মিষ্টি</option>
+                                        <option value="fas fa-cookie-bite">নাস্তা</option>
+                                        <option value="fas fa-utensils">সাধারণ খাবার</option>
+                                        <option value="fas fa-coffee">কফি</option>
+                                        <option value="fas fa-birthday-cake">কেক</option>
+                                        <option value="fas fa-apple-alt">ফল</option>
+                                        <option value="fas fa-french-fries">ফ্রেঞ্চ ফ্রাই</option>
+                                        <option value="fas fa-fire">ভাজা আইটেম</option>
+                                        <option value="fas fa-bread-slice">শর্মা</option>
+                                        <option value="fas fa-sandwich">স্যান্ডউইচ</option>
+                                        <option value="fas fa-glass-whiskey">ফালুদা</option>
+                                        <option value="fas fa-pasta">পাস্তা</option>
+                                        <option value="fas fa-utensils">নুডলস</option>
+                                        <option value="fas fa-circle">ফুচকা</option>
+                                        <option value="fas fa-bowl-food">সুপ</option>
+                                        <option value="fas fa-rice">বিরিয়ানি</option>
+                                        <option value="fas fa-wine-glass">বিভারেজ আইটেম</option>
+                                        <option value="fas fa-box">কম্বো আইটেম</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="icon-input-content" id="imageSection" style="display: none;">
+                                    <div class="image-upload-options">
+                                        <div class="upload-option-tabs">
+                                            <button type="button" class="upload-tab-btn active" onclick="switchUploadTab('url')">URL</button>
+                                            <button type="button" class="upload-tab-btn" onclick="switchUploadTab('file')">File Upload</button>
+                                        </div>
+                                        
+                                        <div class="upload-content" id="urlUploadSection">
+                                            <input type="url" id="categoryIconUrl" placeholder="আইকনের Image URL দিন" onchange="updateIconPreview()">
+                                            <div class="image-upload-help">
+                                                <i class="fas fa-image"></i>
+                                                <p>PNG, JPG, SVG বা অন্য কোনো image URL দিন</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="upload-content" id="fileUploadSection" style="display: none;">
+                                            <input type="file" id="categoryIconFile" accept="image/*" onchange="handleImageUpload()">
+                                            <div class="file-upload-area" onclick="document.getElementById('categoryIconFile').click()">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                                <p>Click to upload image</p>
+                                                <small>PNG, JPG, SVG (Max 2MB)</small>
+                                            </div>
+                                            <div class="upload-progress" id="uploadProgress" style="display: none;">
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" id="progressFill"></div>
+                                                </div>
+                                                <span id="progressText">Uploading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="icon-preview" id="iconPreview">
+                                <i class="fas fa-glass-martini"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeCategoryModal()">বাতিল</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        সেভ করুন
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Sound -->
+    <audio id="notificationSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmFgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+    </audio>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
